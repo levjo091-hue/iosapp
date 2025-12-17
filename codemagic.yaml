@@ -1,0 +1,73 @@
+workflows:
+  ios-release:
+    name: iOS Release (App Store / TestFlight)
+    triggering:
+      events:
+        - push
+        - pull_request
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        # Replace with your app identifier and build number if you want
+        APP_IDENTIFIER: com.example.app
+        BUILD_NUMBER: 1
+    scripts:
+      - name: Install dependencies
+        script: |
+          set -e
+          flutter pub get
+          cd ios || exit 0
+          pod install --repo-update || true
+          cd ..
+      - name: Build iOS (no codesign)
+        script: |
+          set -e
+          # Build the iOS project without code signing. Code signing is handled separately.
+          flutter build ios --release --no-codesign --build-name=1.0.0 --build-number=$BUILD_NUMBER
+      - name: Archive & export IPA
+        script: |
+          set -e
+          # Use Xcode to archive and export an IPA. Requires certificates/provisioning to be configured
+          cd ios
+          # Clean previous builds
+          xcodebuild clean -workspace Runner.xcworkspace -scheme Runner -configuration Release
+          # Archive
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release -archivePath "$CM_BUILD_DIR/Runner.xcarchive" archive -allowProvisioningUpdates
+          # Create ExportOptions.plist for App Store export
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          # Export IPA
+          xcodebuild -exportArchive -archivePath "$CM_BUILD_DIR/Runner.xcarchive" -exportOptionsPlist ExportOptions.plist -exportPath "$CM_BUILD_DIR/ipa" -allowProvisioningUpdates || true
+          cd ..
+    artifacts:
+      - $CM_BUILD_DIR/ipa/*.ipa
+
+    # Publishing section is optional and requires App Store Connect credentials and signing setup
+    publishing:
+      app_store_connect:
+        - name: Upload to App Store / TestFlight (optional)
+          apple_id: $APPLE_ID
+          # You should provide either an API key (preferred) or App-Specific password
+          api_key: Encrypted: <YOUR_ENCRYPTED_API_KEY_HERE>
+          ipa_path: $CM_BUILD_DIR/ipa/*.ipa
+
+# Notes:
+# - This workflow builds the app and creates an IPA. To upload signed IPA to TestFlight/App Store
+#   you must configure code signing (certificates & provisioning) in Codemagic or use fastlane match.
+# - Replace placeholders like APP_IDENTIFIER, BUILD_NUMBER and the API key with your project values.
+# - If you prefer Codemagic's automatic signing, remove --no-codesign and configure the Code Signing
+#   settings in the Codemagic UI or use fastlane match and encrypted credentials in the file.
