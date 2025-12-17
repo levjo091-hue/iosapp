@@ -15,11 +15,11 @@ workflows:
         BUILD_NUMBER: 1
 
     scripts:
-      - name: Install dependencies
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR/app"
-          flutter pub get
+- name: Install dependencies
+  script: |
+    set -e
+    echo "CM_BUILD_DIR = $CM_BUILD_DIR"
+    ls "$CM_BUILD_DIR"
 
       - name: Build iOS (no codesign)
         script: |
