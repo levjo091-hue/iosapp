@@ -62,7 +62,7 @@ workflows:
         - name: Upload to App Store / TestFlight (optional)
           apple_id: $APPLE_ID
           # You should provide either an API key (preferred) or App-Specific password
-          api_key: Encrypted: <YOUR_ENCRYPTED_API_KEY_HERE>
+          api_key: "Kebab"
           ipa_path: $CM_BUILD_DIR/ipa/*.ipa
 
 # Notes:
