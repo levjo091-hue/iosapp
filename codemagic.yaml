@@ -1,80 +1,9 @@
 workflows:
   ios-release:
-    name: iOS Release (App Store / TestFlight)
-    triggering:
-      events:
-        - push
-        - pull_request
-
-    environment:
-      flutter: stable
-      xcode: latest
-      cocoapods: default
-      vars:
-        APP_IDENTIFIER: com.example.app
-        BUILD_NUMBER: 1
-
+    name: iOS Release
     scripts:
-- name: Install dependencies
-  script: |
-    set -e
-    echo "CM_BUILD_DIR = $CM_BUILD_DIR"
-    ls "$CM_BUILD_DIR"
-
-      - name: Build iOS (no codesign)
+      - name: Install dependencies
         script: |
           set -e
-          cd "$CM_BUILD_DIR/app"
-          flutter build ios \
-            --release \
-            --no-codesign \
-            --build-name=1.0.0 \
-            --build-number=$BUILD_NUMBER
-
-      - name: Archive & export IPA
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR/app/ios"
-
-          xcodebuild clean \
-            -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release
-
-          xcodebuild archive \
-            -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath "$CM_BUILD_DIR/Runner.xcarchive" \
-            -allowProvisioningUpdates
-
-          cat > ExportOptions.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
-
-          xcodebuild -exportArchive \
-            -archivePath "$CM_BUILD_DIR/Runner.xcarchive" \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath "$CM_BUILD_DIR/ipa" \
-            -allowProvisioningUpdates
-
-    artifacts:
-      - $CM_BUILD_DIR/ipa/*.ipa
-
-publishing:
-  app_store_connect:
-    - name: App Store Connect Upload
-      apple_id: $APPLE_ID
-      password: $APP_SPECIFIC_PASSWORD
-      ipa_path: $CM_BUILD_DIR/ipa/*.ipa
+          echo "CM_BUILD_DIR = $CM_BUILD_DIR"
+          ls "$CM_BUILD_DIR"
