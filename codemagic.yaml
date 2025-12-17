@@ -57,13 +57,12 @@ workflows:
       - $CM_BUILD_DIR/ipa/*.ipa
 
     # Publishing section is optional and requires App Store Connect credentials and signing setup
-    publishing:
-      app_store_connect:
-        - name: Upload to App Store / TestFlight (optional)
-          apple_id: $APPLE_ID
-          # You should provide either an API key (preferred) or App-Specific password
-          api_key: "Kebab"
-          ipa_path: $CM_BUILD_DIR/ipa/*.ipa
+publishing:
+  app_store_connect:
+    - name: App Store Connect Upload
+      apple_id: $APPLE_ID
+      password: $APP_SPECIFIC_PASSWORD
+      ipa_path: $CM_BUILD_DIR/ipa/*.ipa
 
 # Notes:
 # - This workflow builds the app and creates an IPA. To upload signed IPA to TestFlight/App Store
