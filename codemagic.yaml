@@ -19,8 +19,18 @@ workflows:
           set -e
           flutter pub get
           cd ios || exit 0
-          pod install --repo-update || true
-          cd ..
+         #!/usr/bin/env bash
+set -e
+
+PROJECT_ROOT="$CM_BUILD_DIR/app"   # ändra om din Flutter-app ligger någon annanstans
+cd "$PROJECT_ROOT"
+
+flutter pub get
+
+cd ios
+pod install --repo-update || true
+cd ..
+
       - name: Build iOS (no codesign)
         script: |
           set -e
